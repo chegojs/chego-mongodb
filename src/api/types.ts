@@ -1,0 +1,1 @@
+export type MongoSyntaxTemplate = (...args:any[]) => object | object[];

@@ -1,8 +1,7 @@
-import { Limit, SortingData, Expression, AnyButFunction, Obj, Property, QuerySyntaxEnum } from '@chego/chego-api';
-import { isAlias, isRowId, getLabel } from '@chego/chego-tools';
-import { Row, Join, JoinType, isQueryResult } from '@chego/chego-nosql';
+import { Limit, SortingData, AnyButFunction, Obj, Property, QuerySyntaxEnum, FunctionData } from '@chego/chego-api';
+import { isRowId, getLabel, isProperty, isMySQLFunction } from '@chego/chego-tools';
+import { Join, isQueryResult } from '@chego/chego-nosql';
 import { MongoSyntaxTemplate } from '../api/types';
-
 
 export const getQueryResultValues = (data: AnyButFunction): AnyButFunction[] => {
     const results: AnyButFunction[] = [];
@@ -11,7 +10,6 @@ export const getQueryResultValues = (data: AnyButFunction): AnyButFunction[] => 
     );
     return results;
 }
-
 
 const isIn = (key: string, ...values: AnyButFunction[]): object => ({ [key]: { "$in": values } });
 const isEq = (key: string, value: AnyButFunction): object => ({ [key]: value });
@@ -33,14 +31,20 @@ const runCondition = (condition: (key: string, ...values: AnyButFunction[]) => o
     return condition(key, ...data);
 }
 
-const showDefinedProperties = (selection: object, property: Property) => 
-    Object.assign(selection, { [property.name]: 1 });
+const showDefinedProperties = (selection: object, data: Property | FunctionData) => {
+    const entry: object = isRowId(data)
+        ? { '_id': 1 }
+        : isMySQLFunction(data)
+            ? templates.get(data.type)(data.alias, ...(<FunctionData>data).properties, data.exponent)
+            : { [(<Property>data).name]: 1 };
+    return Object.assign(selection, entry);
+}
 
 const isLimitedSelection = (data: Property[]): boolean =>
-    data.reduce((result, property:Property) => property.name !== '*' ? true : result, false);
+    data.reduce((result, property: Property) => property.name !== '*' ? true : result, false);
 
 const select: MongoSyntaxTemplate = (data: Property[]) => {
-    const selection:any[] = [{
+    const selection: any[] = [{
         $group: {
             _id: "$_id",
             "doc": {
@@ -52,7 +56,7 @@ const select: MongoSyntaxTemplate = (data: Property[]) => {
             "newRoot": "$doc"
         }
     }];
-    if(isLimitedSelection(data)) {
+    if (isLimitedSelection(data)) {
         selection.push({ $project: data.reduce(showDefinedProperties, {}) })
     }
     return selection;
@@ -121,12 +125,82 @@ const leftJoin: MongoSyntaxTemplate = (join: Join) => {
 const limit: MongoSyntaxTemplate = (limit: Limit) =>
     (limit.count)
         ? [{ $skip: limit.offsetOrCount }, { $limit: limit.count }]
-        : { $limit: limit.offsetOrCount };
+        : [{ $limit: limit.offsetOrCount }];
 
 const and: MongoSyntaxTemplate = (expressions: object[]) => ({ $and: expressions });
 const or: MongoSyntaxTemplate = (expressions: object[]) => ({ $or: expressions });
 const not: MongoSyntaxTemplate = (expression: object) => ({ $not: expression });
 
+const listReferences = (props: string[], current: any) =>
+    (props.push(isProperty(current) ? `$${current.name}` : current), props);
+
+const count: MongoSyntaxTemplate = (alias: string) => ({ $count: alias })
+
+const min: MongoSyntaxTemplate = (alias: string, property: Property) => [{
+    $project: {
+        [alias]: `$${property.name}`
+    }
+},
+{
+    $sort: {
+        [property.name]: 1
+    }
+},
+{
+    $limit: 1
+}
+];
+
+const max: MongoSyntaxTemplate = (alias: string, property: Property) => [{
+    $project: {
+        [alias]: `$${property.name}`
+    }
+},
+{
+    $sort: {
+        [property.name]: -1
+    }
+},
+{
+    $limit: 1
+}
+];
+
+const least: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $min: values.reduce(listReferences, [])
+    }
+});
+
+const greatest: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $max: values.reduce(listReferences, [])
+    }
+});
+
+const sum: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $sum: values.reduce(listReferences, [])
+    }
+});
+
+const avg: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $avg: values.reduce(listReferences, [])
+    }
+});
+
+const sqrt: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $sqrt: isProperty(value) ? `$${value.name}` : value
+    }
+});
+
+const pow: MongoSyntaxTemplate = (label: string, value: any, exponent: number) => ({
+    [label]: {
+        $pow: [isProperty(value) ? `$${value.name}` : value, exponent]
+    }
+});
 
 export const templates: Map<QuerySyntaxEnum, MongoSyntaxTemplate> = new Map<QuerySyntaxEnum, MongoSyntaxTemplate>([
     [QuerySyntaxEnum.Select, select],
@@ -145,9 +219,13 @@ export const templates: Map<QuerySyntaxEnum, MongoSyntaxTemplate> = new Map<Quer
     [QuerySyntaxEnum.GroupBy, groupBy],
     [QuerySyntaxEnum.OrderBy, orderBy],
     [QuerySyntaxEnum.LeftJoin, leftJoin],
-    // [QuerySyntaxEnum.Join, exists],
-    // [QuerySyntaxEnum.RightJoin, exists],
-    // [QuerySyntaxEnum.FullJoin, exists]
-    // [QuerySyntaxEnum.Union, exists],
-    // [QuerySyntaxEnum.UnionAll, exists],
+    [QuerySyntaxEnum.Max, max],
+    [QuerySyntaxEnum.Min, min],
+    [QuerySyntaxEnum.Greatest, greatest],
+    [QuerySyntaxEnum.Least, least],
+    [QuerySyntaxEnum.Sum, sum],
+    [QuerySyntaxEnum.Avg, avg],
+    [QuerySyntaxEnum.Sqrt, sqrt],
+    [QuerySyntaxEnum.Pow, pow],
+    [QuerySyntaxEnum.Count, count]
 ]);

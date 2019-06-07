@@ -1,10 +1,10 @@
 import { Db } from 'mongodb';
-import { IQueryContext, DataMap, newDataMap, newRow, Row, OutputDataSnapshot } from '@chego/chego-nosql';
 import { Table, QuerySyntaxEnum, Property } from '@chego/chego-api';
 import { isRowId } from '@chego/chego-tools';
 import { mergeTableB2TableA } from '../joins';
 import { storeOnlyUniqueEntriesIfRequired, applyUnionsIfAny } from '../unions';
 import { newPipelineBuilder } from '../pipelineBuilder'
+import { Row, newRow, IQueryContext, DataMap, OutputDataSnapshot, newDataMap } from '@chego/chego-database-boilerplate';
 
 export const parseRowsToArray = (result: any[], row: Row): any[] => (result.push(Object.assign({}, row.content)), result);
 

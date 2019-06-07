@@ -1,7 +1,7 @@
 import { Limit, SortingData, AnyButFunction, Obj, Property, QuerySyntaxEnum, FunctionData } from '@chego/chego-api';
 import { isRowId, getLabel, isProperty, isMySQLFunction } from '@chego/chego-tools';
-import { Join, isQueryResult } from '@chego/chego-nosql';
 import { MongoSyntaxTemplate } from '../api/types';
+import { isQueryResult, Join } from '@chego/chego-database-boilerplate';
 
 export const getQueryResultValues = (data: AnyButFunction): AnyButFunction[] => {
     const results: AnyButFunction[] = [];

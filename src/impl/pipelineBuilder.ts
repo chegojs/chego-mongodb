@@ -3,7 +3,7 @@ import { mergeObjects } from './utils';
 import { templates } from './templates';
 import { IPipelineBuilder } from '../api/interfaces';
 import { QuerySyntaxEnum, Table, ExpressionOrExpressionScope, SortingData, Limit, Expression, FunctionData, Property } from '@chego/chego-api';
-import { Join, IQueryContext } from '@chego/chego-nosql';
+import { Join, IQueryContext } from '@chego/chego-database-boilerplate';
 
 const useTemplate = (expression: Expression): object => {
     if (!templates.has(expression.type)) {
@@ -140,7 +140,7 @@ export const newPipelineBuilder = (): IPipelineBuilder => {
             _limit.push(...limits);
         }
     }
-    
+
     const withConditions = (table: Table, conditions: ExpressionOrExpressionScope[]) => {
         Object.assign(_match, conditions.reduce(buildConditions(table), {}));
     }

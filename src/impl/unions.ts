@@ -1,6 +1,6 @@
 import { IQueryResult, Table, Property } from '@chego/chego-api';
-import { Union, Row, newRow, IQueryContext, DataMap, OutputDataSnapshot } from '@chego/chego-nosql';
 import { getLabel } from '@chego/chego-tools';
+import { newRow, Row, IQueryContext, DataMap, Union, OutputDataSnapshot } from '@chego/chego-database-boilerplate';
 
 const replaceScheme = (scheme: string[], table: Table) => (list: Row[], row: any): Row[] => {
     const content: any = scheme.reduce((result: any, prop: string) => 

@@ -1,6 +1,6 @@
 import { MongoClientOptions } from 'mongodb';
-import { IQueryContext } from '@chego/chego-nosql';
 import { Table } from '@chego/chego-api';
+import { IQueryContext } from '@chego/chego-database-boilerplate';
 
 export interface IMongoConfig {
     url:string;

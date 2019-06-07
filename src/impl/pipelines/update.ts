@@ -1,7 +1,7 @@
 import { Db } from 'mongodb';
-import { IQueryContext } from '@chego/chego-nosql';
 import { Table } from '@chego/chego-api';
 import { buildConditions } from '../pipelineBuilder';
+import { IQueryContext } from '@chego/chego-database-boilerplate';
 
 export const updateContent = (ref: Db, table: Table, data:any, options:object) => async (): Promise<any> =>
     new Promise((resolve, reject) =>

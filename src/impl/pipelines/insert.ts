@@ -1,6 +1,6 @@
 import { Db } from 'mongodb';
-import { IQueryContext } from '@chego/chego-nosql';
 import { Table } from '@chego/chego-api';
+import { IQueryContext } from '@chego/chego-database-boilerplate';
 
 export const insertData = (ref: Db, table: Table, data:any) => async (): Promise<any> => new Promise((resolve, reject) =>
     ref.collection(table.name).insertMany(data).then(resolve).catch(reject));

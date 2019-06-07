@@ -1,6 +1,6 @@
-import { JoinType, Join, IJoinBuilder, Row, isNumeric, newRow, createEmptyObject, DataMap, IQueryContext } from '@chego/chego-nosql';
 import { Property, Table, AnyButFunction, QuerySyntaxEnum, Fn } from '@chego/chego-api';
 import { newProperty, isRowId, getLabel } from '@chego/chego-tools';
+import { JoinType, Join, IJoinBuilder, Row, isNumeric, newRow, createEmptyObject, DataMap } from '@chego/chego-database-boilerplate';
 
 export const newJoin = (type:JoinType, property:Property): Join => ({type, propertyB:property, propertyA:newProperty({})});
 

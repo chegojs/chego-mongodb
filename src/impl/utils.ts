@@ -1,6 +1,6 @@
-type ISObject = { [key: string]: any };
+import { Obj } from '@chego/chego-api';
 
-const mergeObjectsRecursively = (target:ISObject, current:ISObject) => {
+const mergeObjectsRecursively = (target:Obj, current:Obj) => {
     for (const property in current) {
         try {
             if (current[property].constructor === Object) {
@@ -15,4 +15,4 @@ const mergeObjectsRecursively = (target:ISObject, current:ISObject) => {
     return target;
 }
 
-export const mergeObjects = (target: ISObject, ...objs: ISObject[]) => objs.reduce(mergeObjectsRecursively, target);
+export const mergeObjects = (target: Obj, ...objs: Obj[]) => objs.reduce(mergeObjectsRecursively, target);

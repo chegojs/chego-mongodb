@@ -1,8 +1,8 @@
 import { MongoClient, MongoError, Db } from 'mongodb';
 import { pipelines } from './pipelines/pipelines';
 import { IDatabaseDriver, IQuery } from '@chego/chego-api';
-import { newExecutor } from '@chego/chego-nosql';
 import { IMongoConfig } from '../api/interfaces';
+import { newExecutor } from '@chego/chego-database-boilerplate';
 
 
 export const chegoMongo = (): IDatabaseDriver => {

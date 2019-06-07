@@ -1,7 +1,7 @@
-import { IQueryContext } from '@chego/chego-nosql';
 import { Db } from 'mongodb';
 import { Table } from '@chego/chego-api';
 import { buildConditions } from '../pipelineBuilder';
+import { IQueryContext } from '@chego/chego-database-boilerplate';
 
 export const removeDocuments = (ref: Db, table: Table, options: object) => async (): Promise<any> =>
     new Promise((resolve, reject) =>

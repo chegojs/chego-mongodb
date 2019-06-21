@@ -2,6 +2,7 @@ import { Limit, SortingData, AnyButFunction, Obj, Property, QuerySyntaxEnum, Fun
 import { isRowId, getLabel, isProperty, isMySQLFunction } from '@chego/chego-tools';
 import { MongoSyntaxTemplate } from '../api/types';
 import { isQueryResult, Join } from '@chego/chego-database-boilerplate';
+import { isObject } from 'util';
 
 export const getQueryResultValues = (data: AnyButFunction): AnyButFunction[] => {
     const results: AnyButFunction[] = [];
@@ -32,12 +33,15 @@ const runCondition = (condition: (key: string, ...values: AnyButFunction[]) => o
 }
 
 const showDefinedProperties = (selection: object, data: Property | FunctionData) => {
-    const entry: object = isRowId(data)
-        ? { '_id': 1 }
-        : isMySQLFunction(data)
-            ? templates.get(data.type)(data.alias, ...(<FunctionData>data).properties, data.exponent)
-            : { [(<Property>data).name]: 1 };
-    return Object.assign(selection, entry);
+    if(isRowId(data)) {
+        return Object.assign(selection, { '_id': 1 });
+    } else if(isMySQLFunction(data)) {
+        const params = isObject(data.param) && !isProperty(data.param) ? Object.values(data.param) : [data.param];
+        const entry = templates.get(data.type)(data.alias, ...params);
+        return Object.assign(selection, entry);
+    } else {
+        return Object.assign(selection, { [(<Property>data).name]: 1 });
+    }
 }
 
 const isLimitedSelection = (data: Property[]): boolean =>

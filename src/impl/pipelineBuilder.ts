@@ -1,9 +1,10 @@
-import { isMySQLFunction, isExpressionScope } from '@chego/chego-tools';
+import { isMySQLFunction } from '@chego/chego-tools';
 import { mergeObjects } from './utils';
 import { templates } from './templates';
 import { IPipelineBuilder } from '../api/interfaces';
-import { QuerySyntaxEnum, Table, ExpressionOrExpressionScope, SortingData, Limit, Expression, FunctionData, Property } from '@chego/chego-api';
-import { Join, IQueryContext } from '@chego/chego-database-boilerplate';
+import { QuerySyntaxEnum, Table, SortingData, Limit, FunctionData } from '@chego/chego-api';
+import { Join, IQueryContext, Expressions, ExpressionOrExpressionScope, isExpressionScope, Expression } from '@chego/chego-database-boilerplate';
+import { pipeline } from 'stream';
 
 const useTemplate = (expression: Expression): object => {
     if (!templates.has(expression.type)) {
@@ -16,15 +17,19 @@ const useTemplate = (expression: Expression): object => {
 }
 
 const parseExpression = (table: Table) => (match: object[], current: ExpressionOrExpressionScope): object[] => {
-    if (isExpressionScope(current)) {
-        const template = templates.get(current.type);
-        const expressions: object[] = current.expressions.reduce(parseExpression(table), []);
-        if (expressions.length) {
-            match.push(template(expressions));
-        }
+    if (Array.isArray(current)) {
+        match.push(...current.reduce(parseExpression(table),[]));
     } else {
-        if (table.name === current.property.table.name) {
-            match.push(useTemplate(current));
+        if (isExpressionScope(current)) {
+            const template = templates.get(current.type);
+            const expressions: object[] = current.expressions.reduce(parseExpression(table), []);
+            if (expressions.length) {
+                match.push(template(expressions));
+            }
+        } else {
+            if (table.name === current.property.table.name) {
+                match.push(useTemplate(current));
+            }
         }
     }
     return match;
@@ -39,17 +44,17 @@ const handleLeftJoin = (list: object[], join: Join) => {
 }
 
 export const buildConditions = (table: Table) => (match: object, current: ExpressionOrExpressionScope): object => {
-    if (isExpressionScope(current)) {
-        const template = templates.get(current.type);
-        const expressions: object[] = current.expressions.reduce(parseExpression(table), []);
-        if (expressions.length) {
-            Object.assign(match, template(expressions));
+        if (isExpressionScope(current)) {
+            const template = templates.get(current.type);
+            const expressions: object[] = current.expressions.reduce(parseExpression(table), []);
+            if (expressions.length) {
+                Object.assign(match, template(expressions));
+            }
+        } else {
+            if (table.name === current.property.table.name) {
+                Object.assign(match, useTemplate(current));
+            }
         }
-    } else {
-        if (table.name === current.property.table.name) {
-            Object.assign(match, useTemplate(current));
-        }
-    }
     return match;
 }
 
@@ -104,9 +109,8 @@ export const newPipelineBuilder = (): IPipelineBuilder => {
         const props: any[] = [];
         for (const entry of data) {
             if (isMinMaxCount(entry)) {
-                const property: Property = entry.properties[0];
                 const template = templates.get(entry.type);
-                Object.assign(facet, { [`${queryLabel}${Object.keys(facet).length}`]: template(entry.alias, property) })
+                Object.assign(facet, { [`${queryLabel}${Object.keys(facet).length}`]: template(entry.alias, entry.param) })
             } else {
                 props.push(entry);
             }
@@ -141,18 +145,18 @@ export const newPipelineBuilder = (): IPipelineBuilder => {
         }
     }
 
-    const withConditions = (table: Table, conditions: ExpressionOrExpressionScope[]) => {
+    const withExpressions = (table: Table, conditions: Expressions[]) => {
         Object.assign(_match, conditions.reduce(buildConditions(table), {}));
     }
 
     const _builder: IPipelineBuilder = {
-        with:(queryContext:IQueryContext, defaultTable:Table): IPipelineBuilder => {
+        with: (queryContext: IQueryContext, defaultTable: Table): IPipelineBuilder => {
             withData(queryContext.data);
             withJoins(queryContext.joins)
             withOrderBy(queryContext.orderBy);
             withGroupBy(queryContext.groupBy);
             withLimit(queryContext.limit);
-            withConditions(defaultTable, queryContext.conditions);
+            withExpressions(defaultTable, queryContext.expressions);
             return _builder;
         },
         build: (): object[] => {

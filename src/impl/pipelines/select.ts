@@ -5,6 +5,7 @@ import { mergeTableB2TableA } from '../joins';
 import { storeOnlyUniqueEntriesIfRequired, applyUnionsIfAny } from '../unions';
 import { newPipelineBuilder } from '../pipelineBuilder'
 import { Row, newRow, IQueryContext, DataMap, OutputDataSnapshot, newDataMap } from '@chego/chego-database-boilerplate';
+import { applyMySQLFunctionsIfAny } from '../mysqlFunctions';
 
 export const parseRowsToArray = (result: any[], row: Row): any[] => (result.push(Object.assign({}, row.content)), result);
 
@@ -73,6 +74,7 @@ export const runSelectPipeline = async (ref: Db, queryContext: IQueryContext): P
         for (const table of queryContext.tables) {
             await getTableContent(ref, table, queryContext)
                 .then(removeIdsIfUnnecessary(queryContext))
+                .then(applyMySQLFunctionsIfAny(queryContext))
                 .then((content) => map.set(table.name, content))
                 .catch(reject);
         }

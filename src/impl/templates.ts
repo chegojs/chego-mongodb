@@ -33,9 +33,9 @@ const runCondition = (condition: (key: string, ...values: AnyButFunction[]) => o
 }
 
 const showDefinedProperties = (selection: object, data: Property | FunctionData) => {
-    if(isRowId(data)) {
+    if (isRowId(data)) {
         return Object.assign(selection, { '_id': 1 });
-    } else if(isMySQLFunction(data)) {
+    } else if (isMySQLFunction(data)) {
         const params = isObject(data.param) && !isProperty(data.param) ? Object.values(data.param) : [data.param];
         const entry = templates.get(data.type)(data.alias, ...params);
         return Object.assign(selection, entry);
@@ -206,6 +206,200 @@ const pow: MongoSyntaxTemplate = (label: string, value: any, exponent: number) =
     }
 });
 
+// ----
+
+const abs: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $abs: values.reduce(listReferences, [])
+    }
+});
+
+const ceil: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $ceil: values.reduce(listReferences, [])
+    }
+});
+
+const div: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $divide: values.reduce(listReferences, [])
+    }
+});
+
+const exp: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $exp: values.reduce(listReferences, [])
+    }
+});
+
+const floor: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $floor: values.reduce(listReferences, [])
+    }
+});
+
+const ln: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $ln: values.reduce(listReferences, [])
+    }
+});
+
+const log: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $log: [isProperty(value) ? `$${value.name}` : value, 10]
+    }
+});
+
+const log2: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $divide: [{ $ln: isProperty(value) ? `$${value.name}` : value }, { $ln: 2 }]
+    }
+});
+
+const log10: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $log10: [isProperty(value) ? `$${value.name}` : value]
+    }
+});
+
+const mod: MongoSyntaxTemplate = (label: string, x: any, y: any) => ({
+    [label]: {
+        $mod: [isProperty(x) ? `$${x.name}` : x, isProperty(y) ? `$${y.name}` : y]
+    }
+});
+
+const pi: MongoSyntaxTemplate = (label: string) => ({
+    [label]: Math.PI
+});
+
+const rand: MongoSyntaxTemplate = (label: string) => ({
+    [label]: Math.random()
+});
+
+const sign: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $cmp: [isProperty(value) ? `$${value.name}` : value, 0]
+    }
+});
+
+const truncate: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $divide: [{
+            $trunc: {
+                $multiply: [isProperty(value) ? `$${value.name}` : value, 100]
+            }
+        }, 100]
+    }
+});
+
+const charLength: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $strLenCP: isProperty(value) ? `$${value.name}` : value
+    }
+});
+
+const concat: MongoSyntaxTemplate = (label: string, ...values: any[]) => ({
+    [label]: {
+        $concat: values.reduce(listReferences, [])
+    }
+});
+
+const doConcatWs = (separator: string) => (props: string[], current: any, i: number) => {
+    if (i > 0) {
+        props.push(separator);
+    }
+    props.push(isProperty(current) ? `$${current.name}` : current);
+    return props;
+}
+
+const concatWs: MongoSyntaxTemplate = (label: string, separator: string, ...values: any[]) => ({
+    [label]: {
+        $concat: values.reduce(doConcatWs(separator), [])
+    }
+});
+
+const field: MongoSyntaxTemplate = (label: string, search: any, ...values: any[]) => ({
+    [label]: {
+        $indexOfArray: [values.reduce(listReferences, []), isProperty(search) ? `$${search.name}` : search]
+    }
+});
+
+const findInSet: MongoSyntaxTemplate = (label: string, search: any, set: any) => ({
+    [label]: {
+        $indexOfCP: [isProperty(set) ? `$${set.name}` : set, isProperty(search) ? `$${search.name}` : search]
+    }
+});
+
+const instr: MongoSyntaxTemplate = (label: string, search: any, set: any) => ({
+    [label]: {
+        $indexOfCP: [isProperty(set) ? `$${set.name}` : set, isProperty(search) ? `$${search.name}` : search]
+    }
+});
+
+const lcase: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $toLower: isProperty(value) ? `$${value.name}` : value
+    }
+});
+
+const length: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $strLenBytes: isProperty(value) ? `$${value.name}` : value
+    }
+});
+
+const ltrim: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $ltrim: isProperty(value) ? `$${value.name}` : value
+    }
+});
+
+const rtrim: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $rtrim: isProperty(value) ? `$${value.name}` : value
+    }
+});
+
+const trim: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $trim: isProperty(value) ? `$${value.name}` : value
+    }
+});
+
+const mid: MongoSyntaxTemplate = (label: string, value: any, start: number, length: number) => ({
+    [label]: {
+        $substr: [isProperty(value) ? `$${value.name}` : value, start, length]
+    }
+});
+
+const substr: MongoSyntaxTemplate = (label: string, value: any, start: number, length: number) => ({
+    [label]: {
+        $substr: [isProperty(value) ? `$${value.name}` : value, start, length]
+    }
+});
+
+const position: MongoSyntaxTemplate = (label: string, search: any, set: any) => ({
+    [label]: {
+        $indexOfCP: [isProperty(set) ? `$${set.name}` : set, isProperty(search) ? `$${search.name}` : search]
+    }
+});
+
+const space: MongoSyntaxTemplate = (label: string, value: number) => ({
+    [label]: Array<string>(value).fill(' ').join('')
+});
+
+const strcmp: MongoSyntaxTemplate = (label: string, value1: any, value2: any) => ({
+    [label]: {
+        $strcasecmp: [isProperty(value1) ? `$${value1.name}` : value1, isProperty(value2) ? `$${value2.name}` : value2]
+    }
+});
+
+const ucase: MongoSyntaxTemplate = (label: string, value: any) => ({
+    [label]: {
+        $toUpper: isProperty(value) ? `$${value.name}` : value
+    }
+});
+
 export const templates: Map<QuerySyntaxEnum, MongoSyntaxTemplate> = new Map<QuerySyntaxEnum, MongoSyntaxTemplate>([
     [QuerySyntaxEnum.Select, select],
     [QuerySyntaxEnum.EQ, eq],
@@ -231,5 +425,35 @@ export const templates: Map<QuerySyntaxEnum, MongoSyntaxTemplate> = new Map<Quer
     [QuerySyntaxEnum.Avg, avg],
     [QuerySyntaxEnum.Sqrt, sqrt],
     [QuerySyntaxEnum.Pow, pow],
-    [QuerySyntaxEnum.Count, count]
+    [QuerySyntaxEnum.Abs, abs],
+    [QuerySyntaxEnum.Ceil, ceil],
+    [QuerySyntaxEnum.Div, div],
+    [QuerySyntaxEnum.Exp, exp],
+    [QuerySyntaxEnum.Floor, floor],
+    [QuerySyntaxEnum.Ln, ln],
+    [QuerySyntaxEnum.Log, log],
+    [QuerySyntaxEnum.Log2, log2],
+    [QuerySyntaxEnum.Log10, log10],
+    [QuerySyntaxEnum.Mod, mod],
+    [QuerySyntaxEnum.Pi, pi],
+    [QuerySyntaxEnum.Sign, sign],
+    [QuerySyntaxEnum.Truncate, truncate],
+    [QuerySyntaxEnum.CharLength, charLength],
+    [QuerySyntaxEnum.Concat, concat],
+    [QuerySyntaxEnum.ConcatWs, concatWs],
+    [QuerySyntaxEnum.Field, field],
+    [QuerySyntaxEnum.FindInSet, findInSet],
+    [QuerySyntaxEnum.Instr, instr],
+    [QuerySyntaxEnum.Length, length],
+    [QuerySyntaxEnum.Ltrim, ltrim],
+    [QuerySyntaxEnum.Rtrim, rtrim],
+    [QuerySyntaxEnum.Trim, trim],
+    [QuerySyntaxEnum.Mid, mid],
+    [QuerySyntaxEnum.Substr, substr],
+    [QuerySyntaxEnum.Position, position],
+    [QuerySyntaxEnum.Space, space],
+    [QuerySyntaxEnum.Strcmp, strcmp],
+    [QuerySyntaxEnum.Ucase, ucase],
+    [QuerySyntaxEnum.Lcase, lcase],
+    [QuerySyntaxEnum.Locate, position]
 ]);

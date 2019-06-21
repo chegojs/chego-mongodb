@@ -1,6 +1,6 @@
 {
   "name": "@chego/chego-mongodb",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "MongoDB driver for Chego library.",
   "main": "lib/index.js",
   "files": [
@@ -43,8 +43,8 @@
     "typescript": "^3.4.3"
   },
   "dependencies": {
-    "@chego/chego-api": "2.0.0",
-    "@chego/chego-tools": "2.0.0",
+    "@chego/chego-api": "2.1.0",
+    "@chego/chego-tools": "2.1.0",
     "@chego/chego-database-boilerplate": "1.0.0",
     "@types/mongodb": "^3.1.27",
     "@types/node": "^12.0.2",

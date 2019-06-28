@@ -138,8 +138,6 @@ const not: MongoSyntaxTemplate = (expression: object) => ({ $not: expression });
 const listReferences = (props: string[], current: any) =>
     (props.push(isProperty(current) ? `$${current.name}` : current), props);
 
-const count: MongoSyntaxTemplate = (alias: string) => ({ $count: alias })
-
 const min: MongoSyntaxTemplate = (alias: string, property: Property) => [{
     $project: {
         [alias]: `$${property.name}`

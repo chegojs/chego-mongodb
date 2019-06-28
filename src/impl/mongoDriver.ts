@@ -19,6 +19,7 @@ export const chegoMongo = (): IDatabaseDriver => {
             if (!initialized) {
                 throw new Error('Driver not initialized');
             }
+            
             const db: Db = mongoConfig.database ? client.db(mongoConfig.database) : client.db();
             return newExecutor()
             .withDBRef(db)

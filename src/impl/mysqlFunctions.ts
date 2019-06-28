@@ -28,10 +28,6 @@ const useMathFn = (mathFn: (...args: any[]) => number | string, alias: string, p
 
 const isNumeric = (n: any) => !isNaN(parseFloat(n)) && isFinite(n);
 
-
-const sumRows = (key: string) => (sum: number, row: Row) =>
-    isNumeric(row.content[key]) ? sum += row.content[key] : sum;
-
 const getAscii = (param: any, alias: string) => (rows: Row[], row: Row) => {
     row.content[alias] = String(isProperty(param) ? row.content[param.name] : param).charCodeAt(0);
     return [...rows, row];
